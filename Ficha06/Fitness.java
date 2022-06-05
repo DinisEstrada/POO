@@ -114,21 +114,27 @@ public class Fitness {
     }
 
     public Map<String, List<Utilizador>> podiumPorActiv() {
+ 
         List<Atividade> atividades = this.getAllAtividades();
         Map<String, List<Utilizador>> r = atividades.stream()
         .collect(Collectors.groupingBy(Atividade::getDescricao, Collectors.mapping(Atividade::getUser,Collectors.toList())));
 
-        for (List<Utilizador> u : r.values()) {
-            u = u.stream()
-                .sorted((a,b) ->  (int) b.getAtividadesRealizadas().stream().mapToDouble(Atividade::calorias).sum()
-                            - (int) a.getAtividadesRealizadas().stream().mapToDouble(Atividade::calorias).sum())
+        
+            r.entrySet()
+            .forEach(e -> e.getValue().stream()
+                .sorted((a,b) ->  (int) b.getAtividadesRealizadas().stream()
+                                            .filter(x -> x.getDescricao().equals(e.getKey()))
+                                            .mapToDouble(Atividade::calorias)
+                                            .sum()
+                             -     (int) a.getAtividadesRealizadas().stream()
+                                            .filter(x -> x.getDescricao().equals(e.getKey()))
+                                            .mapToDouble(Atividade::calorias)
+                                            .sum())
                 .limit(3)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+        
+                return r;
 
-        }
-
-        return r;
-                
     }
 
     public List<FazMetros> daoPontos() {
