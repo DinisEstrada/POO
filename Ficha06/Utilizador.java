@@ -1,5 +1,6 @@
 package Ficha06;
 
+import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -150,6 +151,13 @@ public class Utilizador {
         return sb.toString();
     }
 
+    public void escreveEmFicheiroTexto(String nomeFicheiro) throws IOException {
+        PrintWriter p = new PrintWriter(nomeFicheiro);
+        p.println(this.atividades_realizadas.toString());
+        p.flush();
+        p.close();
+    }
+
 
     public void addAtividade(Atividade atividade) {
         this.atividades_realizadas.add(atividade);
@@ -172,5 +180,23 @@ public class Utilizador {
         this.setDesportoFav(r);
                 
     }
+    
+    public boolean equals(Object o) {
+        if (this==o) return true; 
+        if ((o == null) || (this.getClass() != o.getClass())) return false; 
+        
+        Utilizador u = (Utilizador) o; 
+        return u.getEmail().equals(this.email) && 
+               u.getPassword().equals(this.password) &&
+               u.getNome().equals(this.nome) &&               
+               u.getGenero().equals(this.genero) && 
+               u.getAltura() == this.altura &&
+               u.getPeso() == this.peso &&
+               u.getDataDeNascimento().equals(this.data_de_nascimento) &&
+               u.getDesportoFav().equals(this.desporto_favorito) &&
+               u.getAtividadesRealizadas().equals(this.atividades_realizadas);
+
+    }
+    
 
 }

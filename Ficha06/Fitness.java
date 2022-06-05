@@ -1,7 +1,10 @@
 package Ficha06;
 
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import Ficha06.ErrorHandling.*;
+
 
 public class Fitness {
     private Map<String,Utilizador> users;
@@ -12,7 +15,31 @@ public class Fitness {
         this.comparadores = new HashMap<>();
     }
     
-    
+
+    public void guardaEstado (String nomeFicheiro) throws FileNotFoundException,IOException {
+        FileOutputStream fos = new FileOutputStream(nomeFicheiro);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(this);
+        oos.flush();
+        oos.close();
+    }
+
+    public Fitness carregaEstado (String nomeFicheiro) throws FileNotFoundException,IOException,ClassNotFoundException {
+        FileInputStream fos = new FileInputStream(nomeFicheiro);
+        ObjectInputStream oos = new ObjectInputStream(fos);
+        Fitness f = (Fitness) oos.readObject();
+        oos.close();
+        return f;
+    }
+
+
+    public void adicionaUtilizador(Utilizador u) throws UtilizadorRepetidoException {
+        if(this.existeUtilizador(u.getEmail()) && this.users.get(u.getEmail()).equals(u)) 
+            throw new UtilizadorRepetidoException("Utilizador repetido");
+        this.users.put(u.getEmail(),u);
+    }
+
+
     public boolean existeUtilizador(String email) {
         return this.users.containsKey(email);
     }
@@ -28,7 +55,8 @@ public class Fitness {
                 .size();
     }
 
-    public Utilizador getUtilizador(String email) {
+    public Utilizador getUtilizador(String email) throws UtilizadorInexistenteException {
+        if(!this.existeUtilizador(email)) throw new UtilizadorInexistenteException("Utilizador não existente");
         return this.users.get(email);
     }
 
@@ -37,7 +65,8 @@ public class Fitness {
         // tou a adicionar uma atividade a um clone e ao fazer isto não estou a alterar o estado
     }
 
-    public void adiciona(String email, Atividade act) {
+    public void adiciona(String email, Atividade act) throws UtilizadorInexistenteException {
+        if(!this.existeUtilizador(email)) throw new UtilizadorInexistenteException("Utilizador não existente");
         this.users.get(email).addAtividade(act);
         // agora estou a adicionar corretamente porque estou a aceder ao pointer original do user
     }
@@ -58,7 +87,8 @@ public class Fitness {
         return atividades;            
     }    
 
-    public void adiciona(String email, Set<Atividade> activs) {
+    public void adiciona(String email, Set<Atividade> activs) throws UtilizadorInexistenteException {
+        if(!this.existeUtilizador(email)) throw new UtilizadorInexistenteException("Utilizador não existente");
         this.users.get(email).addAtividade(activs);
     }
 
@@ -133,7 +163,7 @@ public class Fitness {
                 .limit(3)
                 .collect(Collectors.toList()));
         
-                return r;
+        return r;
 
     }
 
