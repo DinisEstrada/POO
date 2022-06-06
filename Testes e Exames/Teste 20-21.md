@@ -143,7 +143,7 @@ public void alteraInfo(Consumer<SmartBulbDimmable> bd) {
                 .map(s -> (SmartBulbDimmable) s)
                 .forEach(bd);
 }
-
+```
 ```java
 Consumer<SmartBulbDimmable> bd = s -> s.alteraIntensidade(0.25);
 ```
