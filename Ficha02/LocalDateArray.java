@@ -18,18 +18,21 @@ public class LocalDateArray {
         }
     }
 
-    public LocalDate dataMaisProxima(LocalDate data){
-        LocalDate dataproxima = this.DateArray[0];
-        int dias = 0; //mesmo dia
-        for(LocalDate date : this.DateArray) {
-            int temp = (int) dataproxima.until(date,DAYS);
-            if(dataproxima.until(date,DAYS) < dias) {
-                dias = temp;
-                dataproxima = date;
-            }        
+
+    public LocalDate dataMaisProxima(LocalDate data) {
+        long dataMaisProx_dias = Math.abs(DAYS.between(data, this.DateArray[0]));
+        LocalDate dataMaisProx = this.DateArray[0];
+        for(int i = 1; i < this.numElems; i++) {
+            LocalDate dataTemp = this.DateArray[i];
+            long daysTemp = Math.abs(DAYS.between(data, dataTemp));
+            if(daysTemp < dataMaisProx_dias) {
+                dataMaisProx = dataTemp;
+                dataMaisProx_dias = daysTemp;
+            }
         }
-        return dataproxima;
+        return dataMaisProx;
     }
+
 
     public String toString() {
         StringBuffer sb = new StringBuffer("");
