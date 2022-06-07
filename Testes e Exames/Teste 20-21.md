@@ -38,6 +38,7 @@ public void remove(String id) throws SmartDeviceNotFoundException {
     this.locations.values().forEach(v -> v.remove(d));
 
 }
+```
 
 ### Ex.9
 
