@@ -61,7 +61,7 @@ public class SmartDevice implements Comparator<SmarDevide> {
 ```java
 public Iterator<SmartDevice> devicesPorConsumoCrescente() {
     return this.devices.stream()
-                        .sort((a,b) -> a.compareTo(b))
+                        .sorted((a,b) -> a.compareTo(b))
                         .iterator();
 }
 ```
