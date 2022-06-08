@@ -20,6 +20,14 @@ public class CasaInteligente {
                                 .map(SmartDevice::clone)
                                 .collect(Collectors.toList());
     }
+
+    public CasaInteligente(Map<String,Collection<SmartDevice>> locations) {
+        this.locations = locations.entrySet().stream()
+                                             .collect(Collectors.toMap(Map.Entry::getKey, 
+                                             e-> e.getValue().stream().map(SmartDevice::clone)
+                                                  .collect(Collectors.toList()
+                                             )))   
+    }
 }
 
 ```
