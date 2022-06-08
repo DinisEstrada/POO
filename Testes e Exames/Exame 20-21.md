@@ -137,19 +137,40 @@ public void setAtletas(Set<Pessoa> s) {
 public class Utilizador {
     private String email;
     private String nome;
-    private Collection<Podcast> subscrito;
+    private Map<String,Podcast> subscrito;
+
+
+    public Map<String,Podcast> getSubscrito() {
+        return this.subscrito.values()
+                             .stream()
+                             .map(Podcast::clone)
+                             .collect(Collectors.toMap(p -> p.getNomePodcast(),p -> p);
+    }
 }
 ```
 
 ```java
 public class Podcast {
-    private nomePodcast;
-    private List<Episodio> episodios;
+    private String nomePodcast;
+    private Map<String,Episodio> episodios;
 
-    public List<Episodio> getEpisodios() {
-        return this.episodios.stream()
-                             .map(Episodio::clone)
-                             .collect(Collectors.toList());
+    public Podcast(Podcast p) {
+        this.nomePodcast = p.getNomePodcast();
+        this.episodios = p.getEpisodios();
+    }
+    
+    public String getNomePodcast() {
+        return this.nomePodcast;
+    }
+    
+    public Map<String,Episodio> getEpisodios() {
+        return this.episodios.values()
+                             .stream()
+                             .collect(Collectors.toMap(e -> e.getNome(),e->e.clone()));
+    }
+
+    public Podcast clone() {
+        return new Podcast(this);
     }
 }
 ```
@@ -162,24 +183,36 @@ public class SpotifyPOO {
     public List<Episodio> getEpisodios(String nomePodcast) {
         Podcast p = this.podcasts.get(nomePodcast);
         if (p == null) return new ArrayList<Episodio>();
-        return p.getEpisodios();
-                            
+        return p.getEpisodios().values()
+                               .stream()
+                               .collect(Collectors.toList());                       
     }
 }
 ```
 
 ### Ex.8
+```java
+public class PodCastNotFoundException extends Exception {
+    public PodCastNotFoundException(){
+        super("PodCastNotFoundException");
+    }
+}
+```
+```java
+public class PodCastNotSubscribedException extends Exception {
+    public PodCastNotSubscribedException(){
+        super("PodCastNotSubscribedException");
+    }
+}
+```
+```java
 
 ```java
-private static class PodCastNotFoundException extends Exception {};
-private static class PodCastNotSubscribedException extends Exception {};
-public void remove(String nomeP) throws PodCastException {
+public void remove(String nomeP) throws PodCastNotFoundException, PodCastNotSubscribedException {
     if (!(this.podcasts.containsKey(nomeP))) throw new PodCastNotFoundException();
-    if(!(this.utilizadores.values()
+    if(!(this.podcasts.values()
                         .stream()
-                        .map(Utilizador::subscrito)
-                        .flatMap(Collection::stream)
-                        .anyMatch(n -> n.equals(nomeP)))    
+                        .anyMatch(p -> p.getNomePodcast().equals(nomeP)))    
       ) throw new PodCastNotSubscribedException();
     
     this.podcasts.remove(nomeP);
@@ -190,27 +223,31 @@ public void remove(String nomeP) throws PodCastException {
 
 ```java
 public Episodio getEpisodioMaisLongo(String u) {
-  Utilizador u = this.utilizadores.get(u)  
-  if(u == null) return null;
-  return u.getSubscrito()
-          .stream()
-          .map(Podcast::getEpisodes)
-          .flatMap(Collection::stream)
-          .max((a,b) -> Double.compare(a.getDuracao(), b.getDuracao()))
-          .get()
-}
+    Utilizador user = this.utilizadores.get(u);  
+    if(user == null) return null;
+    return user.getSubscrito()
+                .values()
+                .stream()
+                .map(Podcast::getEpisodios) // Stream<Map<String,Episode>>
+                .map(Map::values) //Stream<Collection<Episode>>
+                .flatMap(Collection::stream)
+                .max((a,b) -> Double.compare(a.getDuracao(), b.getDuracao()))
+                .get();
+      }
 ```
 
 ### Ex.10
 
 ```java
 public Map<Integer,List<Episodio>> episodiosPorClassf() {
-    return this.podcasts.values()
-                        .stream()
-                        .map(Podcast::getEpisodes)
-                        .flatMap(Collection::stream)
-                        .collection(Collectors.groupingBy(Episodio::getClassificacao, 
+    return this.podcasts.values() //Collection<Podcast>
+                        .stream() // Stream<Podcast>
+                        .map(Podcast::getEpisodes) //Stream<Map<String,Episodio>>
+                        .map(e -> e.values()) // Stream<Collection<Episodio>>
+                        .flatMap(Collection::stream) //Stream<Episodio>
+                        .collect(Collectors.groupingBy(Episodio::getClassificacao, 
                                                           Collectors.mapping(Episodio::clone,Collectors.toList())))
+                                    //Map<Integer,List<Episodio>>
 }
 ```
 
@@ -261,7 +298,7 @@ public class EpisodioVideo extends Episodio {
 
 ```java
 public class UtilizadorPremium extends Utilizador {
-    private List<Episodio> queue;
+    private Map<String,Episodio> queue;
 }
 
 
@@ -269,12 +306,28 @@ public class UtilizadorPremium extends Utilizador {
 public class Utilizador {
     private String email;
     private String nome;
-    private Collection<Podcast> subscrito;
+    private Map<String,Podcast> subscrito;
+    private boolean playingEpisode;
 
-    public void playEpisodio(String idPodCast, String nomeEpisodio) throws AlreadyPlayingException {
-        // falta ver este fds    
+    public void playEpisodio(String idPodCast, String nomeEpisodio) throws AlreadyPlayingException,PodCastNotFoundException
+    {
+           if(!(this.subscrito.containsKey(idPodCast) && this.subscrito.get(idPodCast).getEpisodios().containsKey(nomeEpisodio)))
+                throw new PodCastNotFoundException(); // n era preciso dar throw neste ex
+           else if(this.playingEpisode) {
+               if(this instanceof UtilizadorPremium) {
+                    UtilizadorPremium u = (UtilizadorPremium) this ;
+                    Map<String,Episodio> newq = u.getQueue();
+                    newq.put(nomeEpisodio, this.subscrito.get(idPodCast).getEpisodios().get(nomeEpisodio));
+                    u.setQueue(newq);
+                }
+                else {
+                    throw new AlreadyPlayingException();
+                }
+           }
+           else {
+               this.subscrito.get(idPodCast).getEpisodios().get(nomeEpisodio).play();
+           }
     }
-}
 ```
 
 ### Ex.14
@@ -288,7 +341,7 @@ public void gravaInfoEpisodiosParaTocarMaisTarde(String fich) throws IOException
          .map(u -> (UtilizadorPremium) u)
          .forEach(u -> {
              writer.write(u.getNome() + "\n");
-             u.waitQueue.forEach(e -> writer.write(e.getNome() + " - " + e.getDuracao() + "\n"));
+             u.getQueue().forEach(e -> writer.write(e.getNome() + " - " + e.getDuracao() + "\n"));
          });
     writer.flush();
     writer.close();
